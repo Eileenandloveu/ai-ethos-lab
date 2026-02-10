@@ -13,6 +13,10 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ["Space Grotesk", "system-ui", "sans-serif"],
+        mono: ["IBM Plex Mono", "monospace"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -47,6 +51,17 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        live: "hsl(var(--live))",
+        "vote-a": "hsl(var(--vote-a))",
+        "vote-b": "hsl(var(--vote-b))",
+        glow: "hsl(var(--glow))",
+        "console-bg": "hsl(var(--console-bg))",
+        "console-border": "hsl(var(--console-border))",
+        "ticker-bg": "hsl(var(--ticker-bg))",
+        "badge-locked": "hsl(var(--badge-locked))",
+        "badge-active": "hsl(var(--badge-active))",
+        minority: "hsl(var(--minority))",
+        majority: "hsl(var(--majority))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -65,20 +80,12 @@ export default {
       },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
         },
       },
       animation: {
