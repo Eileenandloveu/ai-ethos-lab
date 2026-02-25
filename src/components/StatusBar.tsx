@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
+import { Info } from "lucide-react";
 
-export const StatusBar = () => {
+interface StatusBarProps {
+  yourMatch: number;
+  split: [number, number];
+}
+
+export const StatusBar = ({ yourMatch, split }: StatusBarProps) => {
   const [countdown, setCountdown] = useState("");
+  const [participants, setParticipants] = useState(54231);
 
   useEffect(() => {
     const updateCountdown = () => {
@@ -19,6 +26,16 @@ export const StatusBar = () => {
     return () => clearInterval(id);
   }, []);
 
+  // Non-linear ticking participants
+  useEffect(() => {
+    const tick = () => {
+      const delta = Math.random() < 0.3 ? -Math.floor(Math.random() * 3) : Math.floor(Math.random() * 5);
+      setParticipants((p) => Math.max(53800, p + delta));
+    };
+    const id = setInterval(tick, 2000 + Math.random() * 3000);
+    return () => clearInterval(id);
+  }, []);
+
   return (
     <header className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-sm">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2">
@@ -33,15 +50,23 @@ export const StatusBar = () => {
           </span>
         </div>
 
-        <div className="hidden items-center gap-4 font-mono text-xs text-muted-foreground sm:flex">
-          <span>Nodes: <strong className="text-foreground">10</strong></span>
+        <div className="hidden items-center gap-4 font-mono text-[11px] text-muted-foreground sm:flex">
+          <span className="group relative cursor-help">
+            Live participants: <strong className="text-foreground">{participants.toLocaleString()}</strong>
+            <Info className="ml-0.5 inline h-3 w-3 text-muted-foreground/60" />
+          </span>
           <span className="text-border">|</span>
-          <span>Participants: <strong className="text-foreground">54k</strong></span>
+          <span className="group relative cursor-help">
+            Split: <strong className="text-foreground">{split[0]} / {split[1]}</strong>
+          </span>
           <span className="text-border">|</span>
-          <span>Consensus: <strong className="text-foreground">68%</strong></span>
+          <span className="group relative cursor-help">
+            Your match: <strong className="text-primary">{yourMatch}%</strong>
+            <Info className="ml-0.5 inline h-3 w-3 text-muted-foreground/60" />
+          </span>
           <span className="text-border">|</span>
           <span>
-            Daily reset in{" "}
+            Next refresh:{" "}
             <strong className="text-primary">{countdown}</strong>
           </span>
         </div>

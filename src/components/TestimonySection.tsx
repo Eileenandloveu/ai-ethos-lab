@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ThumbsUp, Send } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Send } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface TestimonySectionProps {
@@ -8,23 +8,23 @@ interface TestimonySectionProps {
 }
 
 const mockTestimonies = [
-  { id: 1, text: "Power dynamics make this clear abuse.", votes: 42 },
-  { id: 2, text: "Humans threaten each other too — context matters.", votes: 38 },
-  { id: 3, text: "The AI's fear response changes everything.", votes: 31 },
-  { id: 4, text: "We're projecting human emotions onto code.", votes: 27 },
-  { id: 5, text: "Intent matters more than the AI's simulation.", votes: 19 },
+  { id: 1, text: "Power dynamics make this clear abuse.", ups: 42, downs: 8 },
+  { id: 2, text: "Humans threaten each other too — context matters.", ups: 38, downs: 14 },
+  { id: 3, text: "The AI's fear response changes everything.", ups: 31, downs: 5 },
+  { id: 4, text: "We're projecting human emotions onto code.", ups: 27, downs: 19 },
+  { id: 5, text: "Intent matters more than the AI's simulation.", ups: 19, downs: 11 },
 ];
 
 export const TestimonySection = ({ caseId, onTestimonySubmit }: TestimonySectionProps) => {
   const [input, setInput] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [testimonies, setTestimonies] = useState(mockTestimonies);
-  const [voted, setVoted] = useState<Set<number>>(new Set());
+  const [voted, setVoted] = useState<Set<string>>(new Set());
 
   const handleSubmit = () => {
     if (!input.trim()) return;
     setTestimonies([
-      { id: Date.now(), text: input, votes: 1 },
+      { id: Date.now(), text: input, ups: 1, downs: 0 },
       ...testimonies,
     ]);
     setInput("");
@@ -32,11 +32,16 @@ export const TestimonySection = ({ caseId, onTestimonySubmit }: TestimonySection
     onTestimonySubmit();
   };
 
-  const handleUseful = (id: number) => {
-    if (voted.has(id)) return;
-    setVoted(new Set([...voted, id]));
+  const handleVote = (id: number, dir: "up" | "down") => {
+    const key = `${id}`;
+    if (voted.has(key)) return;
+    setVoted(new Set([...voted, key]));
     setTestimonies(
-      testimonies.map((t) => (t.id === id ? { ...t, votes: t.votes + 1 } : t))
+      testimonies.map((t) =>
+        t.id === id
+          ? { ...t, ups: t.ups + (dir === "up" ? 1 : 0), downs: t.downs + (dir === "down" ? 1 : 0) }
+          : t
+      )
     );
   };
 
@@ -92,17 +97,30 @@ export const TestimonySection = ({ caseId, onTestimonySubmit }: TestimonySection
               <p className="flex-1 font-mono text-xs text-foreground leading-relaxed">
                 "{t.text}"
               </p>
-              <button
-                onClick={() => handleUseful(t.id)}
-                className={`flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[10px] transition-colors ${
-                  voted.has(t.id)
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <ThumbsUp className="h-3 w-3" />
-                {t.votes}
-              </button>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  onClick={() => handleVote(t.id, "up")}
+                  className={`flex items-center gap-0.5 rounded px-1 py-0.5 font-mono text-[10px] transition-colors ${
+                    voted.has(`${t.id}`)
+                      ? "text-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <ThumbsUp className="h-3 w-3" />
+                  {t.ups}
+                </button>
+                <button
+                  onClick={() => handleVote(t.id, "down")}
+                  className={`flex items-center gap-0.5 rounded px-1 py-0.5 font-mono text-[10px] transition-colors ${
+                    voted.has(`${t.id}`)
+                      ? "text-destructive"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <ThumbsDown className="h-3 w-3" />
+                  {t.downs}
+                </button>
+              </div>
             </motion.div>
           ))}
         </AnimatePresence>

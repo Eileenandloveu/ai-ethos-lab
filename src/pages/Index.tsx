@@ -8,14 +8,21 @@ import { ProgressBadge } from "@/components/ProgressBadge";
 import { TestimonySection } from "@/components/TestimonySection";
 import { CaseList } from "@/components/CaseList";
 
+const AUTO_COUNTDOWN_SECONDS = 15 * 60; // 15 minutes
+
 const Index = () => {
   const [currentCase, setCurrentCase] = useState<Case>(cases[0]);
   const [hasVoted, setHasVoted] = useState(false);
   const [userVote, setUserVote] = useState<"a" | "b" | null>(null);
-  const [trialsCompleted, setTrialsCompleted] = useState(0);
+  const [completedCaseIds, setCompletedCaseIds] = useState<Set<number>>(new Set());
   const [testimoniesGiven, setTestimoniesGiven] = useState(0);
-  const [nextCountdown, setNextCountdown] = useState(10);
+  const [autoCountdown, setAutoCountdown] = useState(AUTO_COUNTDOWN_SECONDS);
+  const [autoEnabled, setAutoEnabled] = useState(true);
   const [showIdlePrompt, setShowIdlePrompt] = useState(false);
+  const [yourMatch, setYourMatch] = useState(68);
+  const [split, setSplit] = useState<[number, number]>([53, 47]);
+
+  const trialsCompleted = completedCaseIds.size;
 
   const goToNextCase = useCallback(() => {
     const currentIndex = cases.findIndex((c) => c.id === currentCase.id);
@@ -23,36 +30,48 @@ const Index = () => {
     setCurrentCase(cases[nextIndex]);
     setHasVoted(false);
     setUserVote(null);
-    setNextCountdown(10);
+    setAutoCountdown(AUTO_COUNTDOWN_SECONDS);
+    setAutoEnabled(true);
     setShowIdlePrompt(false);
   }, [currentCase.id]);
 
   const handleVote = (choice: "a" | "b") => {
     setUserVote(choice);
     setHasVoted(true);
-    setTrialsCompleted((prev) => prev + 1);
-    setNextCountdown(10);
+    setCompletedCaseIds((prev) => new Set([...prev, currentCase.id]));
+    setAutoCountdown(AUTO_COUNTDOWN_SECONDS);
+    setAutoEnabled(true);
+    // Update "Your match" dynamically
+    const votePct = choice === "a" ? currentCase.mockVoteA : 100 - currentCase.mockVoteA;
+    setYourMatch((prev) => Math.round((prev + votePct) / 2));
+    // Update split
+    setSplit([currentCase.mockVoteA, 100 - currentCase.mockVoteA]);
   };
 
   const handleSelectCase = (c: Case) => {
     setCurrentCase(c);
     setHasVoted(false);
     setUserVote(null);
-    setNextCountdown(10);
+    setAutoCountdown(AUTO_COUNTDOWN_SECONDS);
+    setAutoEnabled(true);
     setShowIdlePrompt(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Next case countdown after voting
+  const handleStay = () => {
+    setAutoEnabled(false);
+  };
+
+  // Auto countdown (15 min)
   useEffect(() => {
-    if (!hasVoted) return;
-    if (nextCountdown <= 0) {
+    if (!hasVoted || !autoEnabled) return;
+    if (autoCountdown <= 0) {
       goToNextCase();
       return;
     }
-    const id = setTimeout(() => setNextCountdown((c) => c - 1), 1000);
+    const id = setTimeout(() => setAutoCountdown((c) => c - 1), 1000);
     return () => clearTimeout(id);
-  }, [hasVoted, nextCountdown, goToNextCase]);
+  }, [hasVoted, autoEnabled, autoCountdown, goToNextCase]);
 
   // Idle prompt after 20 seconds of no interaction
   useEffect(() => {
@@ -63,7 +82,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <StatusBar />
+      <StatusBar yourMatch={yourMatch} split={split} />
 
       <main className="mx-auto max-w-7xl px-4 py-6">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_300px]">
@@ -80,7 +99,9 @@ const Index = () => {
                 currentCase={currentCase}
                 userVote={userVote}
                 onNextCase={goToNextCase}
-                countdown={nextCountdown}
+                onStay={handleStay}
+                autoCountdown={autoCountdown}
+                autoEnabled={autoEnabled}
                 trialNumber={trialsCompleted}
               />
             )}
@@ -95,7 +116,7 @@ const Index = () => {
             {/* Idle prompt */}
             {showIdlePrompt && !hasVoted && (
               <div className="animate-slide-up rounded-lg border border-primary/30 bg-primary/5 p-3 text-center font-mono text-xs text-foreground">
-                Stay for one more decision → <span className="font-bold text-primary">unlock Juror Mode</span>
+                Stay for one more decision → <span className="font-semibold text-primary">unlock Juror Mode</span>
               </div>
             )}
 
@@ -113,6 +134,7 @@ const Index = () => {
               trialsCompleted={trialsCompleted}
               streak={2}
               testimoniesGiven={testimoniesGiven}
+              yourMatch={yourMatch}
             />
           </div>
         </div>

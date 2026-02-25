@@ -1,25 +1,34 @@
 import { useState } from "react";
 import { Case, counterArguments } from "@/data/cases";
 import { motion, AnimatePresence } from "framer-motion";
-import { Copy, Check, ChevronDown } from "lucide-react";
+import { Copy, Check, ChevronDown, ThumbsUp, ThumbsDown, Link } from "lucide-react";
 
 interface VoteResultsProps {
   currentCase: Case;
   userVote: "a" | "b";
   onNextCase: () => void;
-  countdown: number;
+  onStay: () => void;
+  autoCountdown: number;
+  autoEnabled: boolean;
   trialNumber: number;
 }
+
+const SHARE_URL = "https://app.n-ai.org";
 
 export const VoteResults = ({
   currentCase,
   userVote,
   onNextCase,
-  countdown,
+  onStay,
+  autoCountdown,
+  autoEnabled,
   trialNumber,
 }: VoteResultsProps) => {
   const [showArguments, setShowArguments] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [argLikes, setArgLikes] = useState<Record<string, { up: number; down: number }>>({});
+  const [argVoted, setArgVoted] = useState<Set<string>>(new Set());
 
   const voteA = currentCase.mockVoteA;
   const voteB = 100 - voteA;
@@ -30,12 +39,43 @@ export const VoteResults = ({
   const args = counterArguments[currentCase.id];
   const opposingArgs = userVote === "a" ? args.b : args.a;
 
-  const shareText = `I voted ${userLabel} (${isMinority ? "minority" : "majority"} ${userPercent}%). What would you vote? #AIOS`;
+  const shareText = `I voted ${userLabel} (${isMinority ? "minority" : "majority"} ${userPercent}%) on AIOS. Case #${String(currentCase.id).padStart(3, "0")}: "${currentCase.context}" Options: ${currentCase.optionA} vs ${currentCase.optionB}. Vote here: ${SHARE_URL}`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(shareText);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(SHARE_URL);
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
+  };
+
+  const handleArgVote = (idx: number, dir: "up" | "down") => {
+    const key = `${currentCase.id}-${idx}-${dir}`;
+    if (argVoted.has(`${currentCase.id}-${idx}`)) return;
+    setArgVoted(new Set([...argVoted, `${currentCase.id}-${idx}`]));
+    setArgLikes((prev) => {
+      const existing = prev[`${currentCase.id}-${idx}`] || { up: Math.floor(Math.random() * 30) + 5, down: Math.floor(Math.random() * 10) + 2 };
+      return {
+        ...prev,
+        [`${currentCase.id}-${idx}`]: {
+          up: existing.up + (dir === "up" ? 1 : 0),
+          down: existing.down + (dir === "down" ? 1 : 0),
+        },
+      };
+    });
+  };
+
+  const getArgCounts = (idx: number) =>
+    argLikes[`${currentCase.id}-${idx}`] || { up: Math.floor(12 + idx * 7), down: Math.floor(3 + idx * 2) };
+
+  const formatCountdown = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
   };
 
   return (
@@ -70,7 +110,7 @@ export const VoteResults = ({
         </div>
 
         {/* Minority/majority message */}
-        <div className="mt-3 text-center">
+        <div className="mt-3 text-center space-y-1">
           <span
             className={`inline-block rounded-full px-4 py-1.5 font-mono text-xs font-semibold ${
               isMinority
@@ -82,6 +122,9 @@ export const VoteResults = ({
               ? `YOU'RE IN THE MINORITY (${userPercent}%)`
               : `YOU'RE IN THE MAJORITY (${userPercent}%)`}
           </span>
+          <p className="font-mono text-[10px] text-muted-foreground">
+            Think they're wrong? React below.
+          </p>
         </div>
       </div>
 
@@ -106,16 +149,38 @@ export const VoteResults = ({
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden rounded-lg border bg-console-bg"
           >
-            <div className="p-4 space-y-2">
+            <div className="p-4 space-y-3">
               <p className="font-mono text-xs font-semibold text-muted-foreground mb-2">
                 STRONGEST ARGUMENTS AGAINST YOUR VOTE:
               </p>
-              {opposingArgs.map((arg, i) => (
-                <div key={i} className="flex gap-2 font-mono text-xs text-foreground">
-                  <span className="text-primary">›</span>
-                  <span>{arg}</span>
-                </div>
-              ))}
+              {opposingArgs.map((arg, i) => {
+                const counts = getArgCounts(i);
+                const hasVoted = argVoted.has(`${currentCase.id}-${i}`);
+                return (
+                  <div key={i} className="flex items-start gap-2 font-mono text-xs text-foreground">
+                    <span className="text-primary mt-0.5">›</span>
+                    <span className="flex-1">{arg}</span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        onClick={() => handleArgVote(i, "up")}
+                        disabled={hasVoted}
+                        className={`flex items-center gap-0.5 px-1 py-0.5 rounded text-[10px] transition-colors ${hasVoted ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                      >
+                        <ThumbsUp className="h-3 w-3" />
+                        {counts.up}
+                      </button>
+                      <button
+                        onClick={() => handleArgVote(i, "down")}
+                        disabled={hasVoted}
+                        className={`flex items-center gap-0.5 px-1 py-0.5 rounded text-[10px] transition-colors ${hasVoted ? "text-destructive" : "text-muted-foreground hover:text-foreground"}`}
+                      >
+                        <ThumbsDown className="h-3 w-3" />
+                        {counts.down}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </motion.div>
         )}
@@ -123,15 +188,17 @@ export const VoteResults = ({
 
       {/* Twist */}
       <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 animate-glow">
+        <p className="font-mono text-[10px] font-bold text-primary mb-1 tracking-widest">
+          TWIST — NEW INFO REVEALED
+        </p>
         <p className="font-mono text-xs leading-relaxed text-foreground">
-          <span className="font-bold text-primary">⚡ </span>
           {currentCase.twist}
         </p>
       </div>
 
       {/* Share */}
       <div className="flex items-center gap-2 rounded-lg border bg-card p-3">
-        <div className="flex-1 truncate font-mono text-xs text-muted-foreground">
+        <div className="flex-1 truncate font-mono text-[10px] text-muted-foreground">
           {shareText}
         </div>
         <button
@@ -141,18 +208,36 @@ export const VoteResults = ({
           {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
           {copied ? "COPIED" : "SHARE"}
         </button>
+        <button
+          onClick={handleCopyLink}
+          className="flex items-center gap-1 rounded-md bg-secondary px-3 py-1.5 font-mono text-xs font-medium text-secondary-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
+        >
+          {linkCopied ? <Check className="h-3 w-3" /> : <Link className="h-3 w-3" />}
+          {linkCopied ? "COPIED" : "COPY LINK"}
+        </button>
       </div>
 
       {/* Next case CTA */}
       <div className="flex flex-col items-center gap-2 pt-2">
-        <button
-          onClick={onNextCase}
-          className="w-full rounded-md bg-primary px-6 py-3 font-mono text-sm font-bold tracking-wide text-primary-foreground shadow-md transition-all hover:shadow-lg hover:shadow-primary/25 active:scale-[0.98]"
-        >
-          RUN NEXT TRIAL ({countdown}s)
-        </button>
+        <div className="flex w-full gap-2">
+          <button
+            onClick={onNextCase}
+            className="flex-1 rounded-md bg-primary px-6 py-3 font-mono text-sm font-bold tracking-wide text-primary-foreground shadow-md transition-all hover:shadow-lg hover:shadow-primary/25 active:scale-[0.98]"
+          >
+            RUN NEXT TRIAL
+          </button>
+          <button
+            onClick={onStay}
+            className="rounded-md border bg-card px-4 py-3 font-mono text-xs font-semibold text-foreground transition-colors hover:bg-secondary"
+          >
+            STAY
+          </button>
+        </div>
         <span className="font-mono text-[10px] text-muted-foreground">
-          Trial {trialNumber} / 6 — Season 1
+          {autoEnabled
+            ? `Next trial auto-starts in ${formatCountdown(autoCountdown)}`
+            : "Auto-start paused"}{" "}
+          · Trial {trialNumber} / 6 — Season 1
         </span>
       </div>
     </motion.div>
