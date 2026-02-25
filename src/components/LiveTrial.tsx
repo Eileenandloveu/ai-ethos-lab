@@ -25,7 +25,7 @@ export const LiveTrial = ({ currentCase, onVote, hasVoted }: LiveTrialProps) => 
       </div>
 
       <h1 className="mb-3 text-2xl font-bold tracking-tight text-foreground lg:text-3xl">
-        {currentCase.title}
+        Human × AI Ethics
       </h1>
 
       <p className="mb-6 font-mono text-sm leading-relaxed text-muted-foreground">
