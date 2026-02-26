@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { StatusBar } from "@/components/StatusBar";
 import { LiveTrial } from "@/components/LiveTrial";
 import { VoteResults } from "@/components/VoteResults";
+import { DebatePanel } from "@/components/DebatePanel";
 import { ParliamentTicker } from "@/components/ParliamentTicker";
 import { ProgressBadge } from "@/components/ProgressBadge";
 import { TestimonySection } from "@/components/TestimonySection";
@@ -39,7 +40,6 @@ const Index = () => {
   const [testimoniesGiven, setTestimoniesGiven] = useState(0);
   const [autoCountdown, setAutoCountdown] = useState(AUTO_COUNTDOWN_SECONDS);
   const [autoEnabled, setAutoEnabled] = useState(true);
-  const [showIdlePrompt, setShowIdlePrompt] = useState(false);
   const [yourMatch, setYourMatch] = useState(68);
 
   const trialsCompleted = completedCaseIds.size;
@@ -104,7 +104,6 @@ const Index = () => {
     setUserVote(null);
     setAutoCountdown(AUTO_COUNTDOWN_SECONDS);
     setAutoEnabled(true);
-    setShowIdlePrompt(false);
   }, [allCases, currentCase]);
 
   const handleVote = async (choice: "a" | "b") => {
@@ -117,7 +116,6 @@ const Index = () => {
 
     try {
       await submitVote(visitorId, currentCase.case_id, choice === "a" ? "A" : "B");
-      // Refresh stats + profile after vote
       const [s, p] = await Promise.all([
         fetchStats(currentCase.case_id),
         fetchProfile(visitorId),
@@ -136,7 +134,6 @@ const Index = () => {
     setUserVote(null);
     setAutoCountdown(AUTO_COUNTDOWN_SECONDS);
     setAutoEnabled(true);
-    setShowIdlePrompt(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -150,17 +147,13 @@ const Index = () => {
     return () => clearTimeout(id);
   }, [hasVoted, autoEnabled, autoCountdown, goToNextCase]);
 
-  // Idle prompt
-  useEffect(() => {
-    if (hasVoted) return;
-    const id = setTimeout(() => setShowIdlePrompt(true), 20000);
-    return () => clearTimeout(id);
-  }, [hasVoted, currentCase?.case_id]);
-
   if (!currentCase) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <span className="font-mono text-sm text-muted-foreground animate-pulse">Loading trial…</span>
+        <div className="text-center space-y-2">
+          <span className="inline-block h-2 w-2 rounded-full bg-live animate-pulse-live" />
+          <p className="font-mono text-sm text-muted-foreground animate-pulse">Connecting to trial…</p>
+        </div>
       </div>
     );
   }
@@ -174,8 +167,16 @@ const Index = () => {
         nextRefresh={stats?.next_refresh_seconds}
       />
 
-      <main className="mx-auto max-w-7xl px-4 py-6">
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_300px]">
+      {/* One-liner */}
+      <div className="border-b bg-card/50 py-1.5">
+        <p className="mx-auto max-w-7xl px-4 font-mono text-[11px] text-muted-foreground text-center">
+          A live governance experiment. Make one decision. Watch the system react.
+        </p>
+      </div>
+
+      <main className="mx-auto max-w-7xl px-4 py-5">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_280px]">
+          {/* Main column */}
           <div className="space-y-4">
             <LiveTrial
               currentCase={currentCase}
@@ -184,31 +185,31 @@ const Index = () => {
             />
 
             {hasVoted && userVote && stats && (
-              <VoteResults
-                currentCase={currentCase}
-                userVote={userVote}
-                splitA={stats.split_a}
-                splitB={stats.split_b}
-                onNextCase={goToNextCase}
-                onStay={handleStay}
-                autoCountdown={autoCountdown}
-                autoEnabled={autoEnabled}
-                trialNumber={trialsCompleted}
-                totalCases={allCases.length}
-              />
-            )}
+              <>
+                <VoteResults
+                  currentCase={currentCase}
+                  userVote={userVote}
+                  splitA={stats.split_a}
+                  splitB={stats.split_b}
+                  onNextCase={goToNextCase}
+                  onStay={handleStay}
+                  autoCountdown={autoCountdown}
+                  autoEnabled={autoEnabled}
+                  trialNumber={trialsCompleted}
+                  totalCases={allCases.length}
+                />
 
-            {hasVoted && (
-              <TestimonySection
-                caseId={currentCase.case_id}
-                onTestimonySubmit={() => setTestimoniesGiven((p) => p + 1)}
-              />
-            )}
+                <DebatePanel
+                  userVote={userVote}
+                  optionALabel={currentCase.option_a_label}
+                  optionBLabel={currentCase.option_b_label}
+                />
 
-            {showIdlePrompt && !hasVoted && (
-              <div className="animate-slide-up rounded-lg border border-primary/30 bg-primary/5 p-3 text-center font-mono text-xs text-foreground">
-                Stay for one more decision → <span className="font-semibold text-primary">unlock Juror Mode</span>
-              </div>
+                <TestimonySection
+                  caseId={currentCase.case_id}
+                  onTestimonySubmit={() => setTestimoniesGiven((p) => p + 1)}
+                />
+              </>
             )}
 
             <CaseList
@@ -218,6 +219,7 @@ const Index = () => {
             />
           </div>
 
+          {/* Sidebar */}
           <div className="space-y-4 lg:sticky lg:top-20 lg:self-start">
             <ParliamentTicker council={council} />
             <ProgressBadge

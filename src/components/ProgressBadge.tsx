@@ -60,32 +60,50 @@ export const ProgressBadge = ({ trialsCompleted, streak, testimoniesGiven, yourM
 
           {/* Badges */}
           <div className="mt-2 space-y-2">
-            <div className={`flex items-center gap-2 rounded-md px-3 py-2 font-mono text-xs ${
-              currentRole === "WITNESS" ? "bg-primary/10 text-primary border border-primary/30" : "bg-muted text-muted-foreground"
+            {/* WITNESS - always visible, shiny when active */}
+            <div className={`flex items-center gap-2 rounded-md px-3 py-2 font-mono text-xs transition-all ${
+              currentRole === "WITNESS"
+                ? "bg-primary/10 text-primary border border-primary/30 shadow-sm shadow-primary/10"
+                : "bg-muted text-muted-foreground"
             }`}>
               <Eye className="h-3.5 w-3.5" />
               <span className="font-semibold">WITNESS</span>
-              {currentRole === "WITNESS" && <span className="ml-auto text-[10px]">ACTIVE</span>}
+              {currentRole === "WITNESS" && <span className="ml-auto text-[10px] font-bold">✦ ACTIVE</span>}
             </div>
 
-            <div className={`flex items-center gap-2 rounded-md px-3 py-2 font-mono text-xs ${
-              currentRole === "JUROR" ? "bg-primary/10 text-primary border border-primary/30" :
-              isJurorUnlocked ? "bg-muted text-foreground" : "bg-muted text-badge-locked"
+            {/* JUROR */}
+            <div className={`flex items-center gap-2 rounded-md px-3 py-2 font-mono text-xs transition-all ${
+              currentRole === "JUROR"
+                ? "bg-primary/10 text-primary border border-primary/30 shadow-sm shadow-primary/10"
+                : isJurorUnlocked
+                ? "bg-muted text-foreground"
+                : "bg-muted text-badge-locked"
             }`}>
               <Shield className="h-3.5 w-3.5" />
               <span className="font-semibold">JUROR</span>
               {!isJurorUnlocked && <Lock className="ml-auto h-3 w-3" />}
-              {currentRole === "JUROR" && <span className="ml-auto text-[10px]">ACTIVE</span>}
+              {currentRole === "JUROR" && <span className="ml-auto text-[10px] font-bold">✦ ACTIVE</span>}
             </div>
 
-            <div className={`flex items-center gap-2 rounded-md px-3 py-2 font-mono text-xs ${
-              currentRole === "CLERK" ? "bg-primary/10 text-primary border border-primary/30" :
-              isClerkUnlocked ? "bg-muted text-foreground" : "bg-muted text-badge-locked"
+            {/* Unlock hint - NOT a button */}
+            {!isJurorUnlocked && (
+              <p className="font-mono text-[10px] text-muted-foreground pl-1">
+                Unlock Juror: complete 3 trials + 1 testimony
+              </p>
+            )}
+
+            {/* CLERK */}
+            <div className={`flex items-center gap-2 rounded-md px-3 py-2 font-mono text-xs transition-all ${
+              currentRole === "CLERK"
+                ? "bg-primary/10 text-primary border border-primary/30 shadow-sm shadow-primary/10"
+                : isClerkUnlocked
+                ? "bg-muted text-foreground"
+                : "bg-muted text-badge-locked"
             }`}>
               <FileText className="h-3.5 w-3.5" />
               <span className="font-semibold">CLERK</span>
               {!isClerkUnlocked && <Lock className="ml-auto h-3 w-3" />}
-              {currentRole === "CLERK" && <span className="ml-auto text-[10px]">ACTIVE</span>}
+              {currentRole === "CLERK" && <span className="ml-auto text-[10px] font-bold">✦ ACTIVE</span>}
             </div>
           </div>
 
@@ -128,8 +146,9 @@ export const ProgressBadge = ({ trialsCompleted, streak, testimoniesGiven, yourM
                   <div className="flex items-center gap-2 mb-1">
                     <Eye className="h-3.5 w-3.5 text-primary" />
                     <span className="font-bold text-foreground">WITNESS</span>
+                    <span className="text-[9px] text-muted-foreground">(default)</span>
                   </div>
-                  <p className="text-muted-foreground leading-relaxed">You vote on cases. Fast participation.</p>
+                  <p className="text-muted-foreground leading-relaxed">You vote on cases and share your perspective. Everyone starts here.</p>
                 </div>
                 <div className="border-b border-dashed" />
                 <div>
@@ -138,7 +157,7 @@ export const ProgressBadge = ({ trialsCompleted, streak, testimoniesGiven, yourM
                     <span className="font-bold text-foreground">JUROR</span>
                     <span className="text-[9px] text-muted-foreground">(unlock: 3 trials + 1 testimony)</span>
                   </div>
-                  <p className="text-muted-foreground leading-relaxed">You vote on rule-level questions. Your vote shapes rules.</p>
+                  <p className="text-muted-foreground leading-relaxed">Your votes shape the rules. Unlocked first.</p>
                 </div>
                 <div className="border-b border-dashed" />
                 <div>
@@ -147,7 +166,7 @@ export const ProgressBadge = ({ trialsCompleted, streak, testimoniesGiven, yourM
                     <span className="font-bold text-foreground">CLERK</span>
                     <span className="text-[9px] text-muted-foreground">(unlock after Juror + 7 trials)</span>
                   </div>
-                  <p className="text-muted-foreground leading-relaxed">Generate case summary cards. Your summary is displayed and referenced — prestige.</p>
+                  <p className="text-muted-foreground leading-relaxed">Generate case summaries. Your work is displayed and referenced — prestige.</p>
                 </div>
               </div>
             </motion.div>
