@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_council_state: {
+        Row: {
+          decision_eta_seconds: number
+          heat_level: string
+          id: string
+          motion_no: number
+          motion_text: string
+          split_a: number
+          split_b: number
+          updated_at: string
+        }
+        Insert: {
+          decision_eta_seconds?: number
+          heat_level?: string
+          id?: string
+          motion_no?: number
+          motion_text?: string
+          split_a?: number
+          split_b?: number
+          updated_at?: string
+        }
+        Update: {
+          decision_eta_seconds?: number
+          heat_level?: string
+          id?: string
+          motion_no?: number
+          motion_text?: string
+          split_a?: number
+          split_b?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       camp_choices: {
         Row: {
           camp: string
@@ -110,6 +143,7 @@ export type Database = {
           option_a_label: string
           option_b_label: string
           prompt: string
+          season: number
           status: string
           title: string
         }
@@ -120,6 +154,7 @@ export type Database = {
           option_a_label: string
           option_b_label: string
           prompt: string
+          season?: number
           status?: string
           title: string
         }
@@ -130,6 +165,7 @@ export type Database = {
           option_a_label?: string
           option_b_label?: string
           prompt?: string
+          season?: number
           status?: string
           title?: string
         }
@@ -188,6 +224,39 @@ export type Database = {
           id?: string
           status?: string
           title?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          clerk_unlocked: boolean
+          juror_unlocked: boolean
+          match_pct: number
+          role: string
+          streak_days: number
+          trials_completed: number
+          updated_at: string
+          visitor_id: string
+        }
+        Insert: {
+          clerk_unlocked?: boolean
+          juror_unlocked?: boolean
+          match_pct?: number
+          role?: string
+          streak_days?: number
+          trials_completed?: number
+          updated_at?: string
+          visitor_id: string
+        }
+        Update: {
+          clerk_unlocked?: boolean
+          juror_unlocked?: boolean
+          match_pct?: number
+          role?: string
+          streak_days?: number
+          trials_completed?: number
+          updated_at?: string
+          visitor_id?: string
         }
         Relationships: []
       }
