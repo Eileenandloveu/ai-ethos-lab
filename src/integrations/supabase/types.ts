@@ -14,7 +14,183 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      camp_choices: {
+        Row: {
+          camp: string
+          created_at: string
+          id: string
+          visitor_id: string
+        }
+        Insert: {
+          camp: string
+          created_at?: string
+          id?: string
+          visitor_id: string
+        }
+        Update: {
+          camp?: string
+          created_at?: string
+          id?: string
+          visitor_id?: string
+        }
+        Relationships: []
+      }
+      case_stats_seed: {
+        Row: {
+          base_participants: number
+          base_split_a: number
+          case_id: string
+          drift_per_min: number
+          updated_at: string
+        }
+        Insert: {
+          base_participants?: number
+          base_split_a?: number
+          case_id: string
+          drift_per_min?: number
+          updated_at?: string
+        }
+        Update: {
+          base_participants?: number
+          base_split_a?: number
+          case_id?: string
+          drift_per_min?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_stats_seed_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: true
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      case_votes: {
+        Row: {
+          case_id: string
+          choice: string
+          created_at: string
+          id: string
+          updated_at: string
+          visitor_id: string
+        }
+        Insert: {
+          case_id: string
+          choice: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          visitor_id: string
+        }
+        Update: {
+          case_id?: string
+          choice?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          visitor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_votes_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cases: {
+        Row: {
+          case_no: string
+          created_at: string
+          id: string
+          option_a_label: string
+          option_b_label: string
+          prompt: string
+          status: string
+          title: string
+        }
+        Insert: {
+          case_no: string
+          created_at?: string
+          id?: string
+          option_a_label: string
+          option_b_label: string
+          prompt: string
+          status?: string
+          title: string
+        }
+        Update: {
+          case_no?: string
+          created_at?: string
+          id?: string
+          option_a_label?: string
+          option_b_label?: string
+          prompt?: string
+          status?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      clause_votes: {
+        Row: {
+          clause_id: string
+          created_at: string
+          id: string
+          visitor_id: string
+          vote: string
+        }
+        Insert: {
+          clause_id: string
+          created_at?: string
+          id?: string
+          visitor_id: string
+          vote: string
+        }
+        Update: {
+          clause_id?: string
+          created_at?: string
+          id?: string
+          visitor_id?: string
+          vote?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clause_votes_clause_id_fkey"
+            columns: ["clause_id"]
+            isOneToOne: false
+            referencedRelation: "clauses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clauses: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          status: string
+          title: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          status?: string
+          title: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          status?: string
+          title?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
