@@ -67,11 +67,12 @@ const Index = () => {
 
   // ── Stats polling ──
   useEffect(() => {
-    if (!currentCase) return;
+    if (!currentCase?.case_id) return;
+    const caseId = currentCase.case_id;
     let timer: ReturnType<typeof setTimeout>;
     const load = async () => {
       try {
-        const s = await fetchStats(currentCase.case_id);
+        const s = await fetchStats(caseId);
         setStats(s);
         timer = setTimeout(load, (s.next_refresh_seconds ?? 60) * 1000);
       } catch (e) {
@@ -107,7 +108,7 @@ const Index = () => {
   }, [allCases, currentCase]);
 
   const handleVote = async (choice: "a" | "b") => {
-    if (!currentCase) return;
+    if (!currentCase?.case_id) return;
     setUserVote(choice);
     setHasVoted(true);
     setCompletedCaseIds((prev) => new Set([...prev, currentCase.case_id]));
