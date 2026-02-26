@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { BackendCase } from "@/lib/api";
-import { motion, AnimatePresence } from "framer-motion";
-import { Copy, Check, ChevronDown, ThumbsUp, ThumbsDown, Link } from "lucide-react";
+import { motion } from "framer-motion";
+import { Copy, Check, Link } from "lucide-react";
 
 interface VoteResultsProps {
   currentCase: BackendCase;
@@ -39,7 +39,7 @@ export const VoteResults = ({
   const isMinority = userPercent < 50;
   const userLabel = userVote === "a" ? currentCase.option_a_label : currentCase.option_b_label;
 
-  const shareText = `I voted ${userLabel} (${isMinority ? "minority" : "majority"} ${userPercent}%) on AIOS. Case #${currentCase.case_no}: "${currentCase.prompt}" Options: ${currentCase.option_a_label} vs ${currentCase.option_b_label}. Vote here: ${SHARE_URL}`;
+  const shareText = `I voted "${userLabel}" (${isMinority ? "minority" : "majority"} ${userPercent}%) on AIOS Case #${currentCase.case_no}: "${currentCase.prompt}" — ${currentCase.option_a_label} vs ${currentCase.option_b_label}. Vote: ${SHARE_URL}`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(shareText);
@@ -64,7 +64,7 @@ export const VoteResults = ({
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.1 }}
-      className="mt-4 space-y-4"
+      className="space-y-3"
     >
       {/* Vote bar */}
       <div className="rounded-lg border bg-card p-5 shadow-sm">
@@ -72,7 +72,7 @@ export const VoteResults = ({
           <span className="font-semibold text-vote-a">{currentCase.option_a_label}</span>
           <span className="font-semibold text-vote-b">{currentCase.option_b_label}</span>
         </div>
-        <div className="relative h-8 w-full overflow-hidden rounded-full bg-muted">
+        <div className="relative h-9 w-full overflow-hidden rounded-full bg-muted">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${voteA}%` }}
@@ -85,21 +85,21 @@ export const VoteResults = ({
             transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 }}
             className="absolute inset-y-0 right-0 rounded-r-full bg-vote-b"
           />
-          <div className="absolute inset-0 flex items-center justify-center font-mono text-sm font-bold text-foreground">
+          <div className="absolute inset-0 flex items-center justify-center font-mono text-sm font-bold text-foreground drop-shadow-sm">
             {voteA}% vs {voteB}%
           </div>
         </div>
 
-        <div className="mt-3 text-center space-y-1">
+        <div className="mt-3 text-center">
           <span
-            className={`inline-block rounded-full px-4 py-1.5 font-mono text-xs font-semibold ${
+            className={`inline-block rounded-full px-4 py-1.5 font-mono text-xs font-bold ${
               isMinority
-                ? "bg-minority/10 text-minority"
-                : "bg-majority/10 text-majority"
+                ? "bg-minority/10 text-minority border border-minority/20"
+                : "bg-majority/10 text-majority border border-majority/20"
             }`}
           >
             {isMinority
-              ? `YOU'RE IN THE MINORITY (${userPercent}%)`
+              ? `YOU'RE IN THE MINORITY (${userPercent}%). Think they're wrong? React below.`
               : `YOU'RE IN THE MAJORITY (${userPercent}%)`}
           </span>
         </div>
@@ -127,19 +127,19 @@ export const VoteResults = ({
       </div>
 
       {/* Next case CTA */}
-      <div className="flex flex-col items-center gap-2 pt-2">
+      <div className="flex flex-col items-center gap-2 pt-1">
         <div className="flex w-full gap-2">
           <button
             onClick={onNextCase}
-            className="flex-1 rounded-md bg-primary px-6 py-3 font-mono text-sm font-bold tracking-wide text-primary-foreground shadow-md transition-all hover:shadow-lg hover:shadow-primary/25 active:scale-[0.98]"
+            className="flex-1 rounded-lg bg-primary px-6 py-3.5 font-mono text-sm font-bold tracking-wide text-primary-foreground shadow-md transition-all hover:shadow-lg hover:shadow-primary/25 active:scale-[0.98]"
           >
             RUN NEXT TRIAL
           </button>
           <button
             onClick={onStay}
-            className="rounded-md border bg-card px-4 py-3 font-mono text-xs font-semibold text-foreground transition-colors hover:bg-secondary"
+            className="rounded-lg border bg-card px-4 py-3.5 font-mono text-xs font-semibold text-foreground transition-colors hover:bg-secondary"
           >
-            STAY
+            STAY ON THIS CASE
           </button>
         </div>
         <span className="font-mono text-[10px] text-muted-foreground">
