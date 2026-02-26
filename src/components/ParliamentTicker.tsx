@@ -1,47 +1,34 @@
 import { useEffect, useState } from "react";
+import { CouncilState } from "@/lib/api";
 
-export const ParliamentTicker = () => {
+interface ParliamentTickerProps {
+  council: CouncilState | null;
+}
+
+export const ParliamentTicker = ({ council }: ParliamentTickerProps) => {
   const [decisionCountdown, setDecisionCountdown] = useState("");
-  const [heatLevel, setHeatLevel] = useState("HIGH");
-  const [split, setSplit] = useState([53, 47]);
+
+  const etaSeconds = council?.decision_eta_seconds ?? 4680;
 
   useEffect(() => {
-    const updateCountdown = () => {
-      const now = new Date();
-      const target = new Date(now);
-      target.setHours(now.getHours() + 2, 14, 36, 0);
-      const diff = target.getTime() - now.getTime();
-      const h = String(Math.floor(diff / 3600000)).padStart(2, "0");
-      const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2, "0");
-      const s = String(Math.floor((diff % 60000) / 1000)).padStart(2, "0");
+    let remaining = etaSeconds;
+    const tick = () => {
+      remaining = Math.max(0, remaining - 1);
+      const h = String(Math.floor(remaining / 3600)).padStart(2, "0");
+      const m = String(Math.floor((remaining % 3600) / 60)).padStart(2, "0");
+      const s = String(remaining % 60).padStart(2, "0");
       setDecisionCountdown(`${h}:${m}:${s}`);
     };
-    updateCountdown();
-    const id = setInterval(updateCountdown, 1000);
+    tick();
+    const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, []);
+  }, [etaSeconds]);
 
-  useEffect(() => {
-    const states = ["HIGH", "CRITICAL", "MODERATE", "HIGH"];
-    let idx = 0;
-    const id = setInterval(() => {
-      idx = (idx + 1) % states.length;
-      setHeatLevel(states[idx]);
-    }, 8000);
-    return () => clearInterval(id);
-  }, []);
-
-  // Dynamic split changes
-  useEffect(() => {
-    const id = setInterval(() => {
-      setSplit((prev) => {
-        const delta = Math.random() < 0.5 ? -1 : 1;
-        const newA = Math.max(40, Math.min(60, prev[0] + delta));
-        return [newA, 100 - newA];
-      });
-    }, 5000 + Math.random() * 4000);
-    return () => clearInterval(id);
-  }, []);
+  const heatLevel = council?.heat_level ?? "MODERATE";
+  const splitA = council?.split_a ?? 50;
+  const splitB = council?.split_b ?? 50;
+  const motionNo = council?.motion_no ?? 0;
+  const motionText = council?.motion_text ?? "Loading…";
 
   return (
     <div className="rounded-lg border bg-card p-4 shadow-sm">
@@ -55,15 +42,13 @@ export const ParliamentTicker = () => {
       <div className="space-y-2.5 font-mono text-xs">
         <div className="flex justify-between">
           <span className="text-muted-foreground">Split</span>
-          <span className="font-semibold text-foreground">{split[0]} / {split[1]}</span>
+          <span className="font-semibold text-foreground">{splitA} / {splitB}</span>
         </div>
         <div className="border-b border-dashed" />
 
         <div>
-          <span className="text-muted-foreground">Motion #12 pending:</span>
-          <p className="mt-0.5 text-foreground leading-snug">
-            Due process before deletion?
-          </p>
+          <span className="text-muted-foreground">Motion #{motionNo} pending:</span>
+          <p className="mt-0.5 text-foreground leading-snug">{motionText}</p>
         </div>
         <div className="border-b border-dashed" />
 
@@ -87,10 +72,6 @@ export const ParliamentTicker = () => {
           <span className="text-muted-foreground">Decision expected in</span>
           <span className="font-bold text-primary">{decisionCountdown}</span>
         </div>
-
-        <p className="text-[9px] text-muted-foreground/60 mt-1">
-          (Preview demo: timing may be simulated)
-        </p>
       </div>
     </div>
   );

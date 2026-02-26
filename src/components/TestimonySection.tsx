@@ -3,7 +3,7 @@ import { ThumbsUp, ThumbsDown, Send } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface TestimonySectionProps {
-  caseId: number;
+  caseId: string;
   onTestimonySubmit: () => void;
 }
 
@@ -51,7 +51,6 @@ export const TestimonySection = ({ caseId, onTestimonySubmit }: TestimonySection
         TESTIMONIES
       </h3>
 
-      {/* Input */}
       {!submitted && (
         <div className="mb-4">
           <p className="mb-2 font-mono text-xs text-muted-foreground">
@@ -84,7 +83,6 @@ export const TestimonySection = ({ caseId, onTestimonySubmit }: TestimonySection
         <p className="mb-4 font-mono text-xs text-majority">✓ Testimony recorded</p>
       )}
 
-      {/* Top testimonies */}
       <div className="space-y-2">
         <AnimatePresence>
           {testimonies.slice(0, 5).map((t) => (

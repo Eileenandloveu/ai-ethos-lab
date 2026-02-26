@@ -1,12 +1,13 @@
-import { cases, Case } from "@/data/cases";
+import { BackendCase } from "@/lib/api";
 import { motion } from "framer-motion";
 
 interface CaseListProps {
-  currentCaseId: number;
-  onSelectCase: (c: Case) => void;
+  cases: BackendCase[];
+  currentCaseId: string;
+  onSelectCase: (c: BackendCase) => void;
 }
 
-export const CaseList = ({ currentCaseId, onSelectCase }: CaseListProps) => {
+export const CaseList = ({ cases, currentCaseId, onSelectCase }: CaseListProps) => {
   return (
     <div className="rounded-lg border bg-card p-5 shadow-sm">
       <h3 className="mb-3 font-mono text-xs font-bold tracking-widest text-foreground">
@@ -15,10 +16,10 @@ export const CaseList = ({ currentCaseId, onSelectCase }: CaseListProps) => {
 
       <div className="space-y-2">
         {cases.map((c) => {
-          const isActive = c.id === currentCaseId;
+          const isActive = c.case_id === currentCaseId;
           return (
             <motion.button
-              key={c.id}
+              key={c.case_id}
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
               onClick={() => onSelectCase(c)}
@@ -30,9 +31,9 @@ export const CaseList = ({ currentCaseId, onSelectCase }: CaseListProps) => {
             >
               <div className="flex items-center gap-2 mb-1">
                 <span className="font-mono text-[10px] text-muted-foreground">
-                  #{String(c.id).padStart(3, "0")}
+                  #{c.case_no}
                 </span>
-                {isActive && (
+                {c.status === "active" && (
                   <span className="flex items-center gap-1 font-mono text-[10px] text-primary">
                     <span className="inline-block h-1.5 w-1.5 rounded-full bg-live animate-pulse-live" />
                     ACTIVE
@@ -40,10 +41,10 @@ export const CaseList = ({ currentCaseId, onSelectCase }: CaseListProps) => {
                 )}
               </div>
               <p className="font-mono text-xs text-foreground leading-snug">
-                {c.context.split(". ")[0]}
+                {c.prompt.split(". ")[0]}
               </p>
               <p className="mt-1 font-mono text-[10px] text-muted-foreground">
-                {c.optionA} vs {c.optionB}
+                {c.option_a_label} vs {c.option_b_label}
               </p>
             </motion.button>
           );

@@ -4,11 +4,13 @@ import { Info } from "lucide-react";
 interface StatusBarProps {
   yourMatch: number;
   split: [number, number];
+  participants?: number;
+  nextRefresh?: number;
 }
 
-export const StatusBar = ({ yourMatch, split }: StatusBarProps) => {
+export const StatusBar = ({ yourMatch, split, participants: extParticipants, nextRefresh }: StatusBarProps) => {
   const [countdown, setCountdown] = useState("");
-  const [participants, setParticipants] = useState(54231);
+  const displayParticipants = extParticipants ?? 0;
 
   useEffect(() => {
     const updateCountdown = () => {
@@ -23,16 +25,6 @@ export const StatusBar = ({ yourMatch, split }: StatusBarProps) => {
     };
     updateCountdown();
     const id = setInterval(updateCountdown, 1000);
-    return () => clearInterval(id);
-  }, []);
-
-  // Non-linear ticking participants
-  useEffect(() => {
-    const tick = () => {
-      const delta = Math.random() < 0.3 ? -Math.floor(Math.random() * 3) : Math.floor(Math.random() * 5);
-      setParticipants((p) => Math.max(53800, p + delta));
-    };
-    const id = setInterval(tick, 2000 + Math.random() * 3000);
     return () => clearInterval(id);
   }, []);
 
@@ -52,7 +44,7 @@ export const StatusBar = ({ yourMatch, split }: StatusBarProps) => {
 
         <div className="hidden items-center gap-4 font-mono text-[11px] text-muted-foreground sm:flex">
           <span className="group relative cursor-help">
-            Live participants: <strong className="text-foreground">{participants.toLocaleString()}</strong>
+            Live participants: <strong className="text-foreground">{displayParticipants.toLocaleString()}</strong>
             <Info className="ml-0.5 inline h-3 w-3 text-muted-foreground/60" />
           </span>
           <span className="text-border">|</span>
