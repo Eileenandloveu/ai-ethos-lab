@@ -25,11 +25,9 @@ Deno.serve(async (req) => {
 
   const { data, error } = await supabase
     .from("cases")
-    .select("id, case_no, title, prompt, option_a_label, option_b_label")
-    .eq("status", "active")
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .select("id, case_no, title, prompt, option_a_label, option_b_label, status, season")
+    .eq("season", 1)
+    .order("case_no", { ascending: true });
 
   if (error) {
     return new Response(JSON.stringify({ error: error.message }), {
@@ -38,21 +36,7 @@ Deno.serve(async (req) => {
     });
   }
 
-  if (!data) {
-    return new Response(JSON.stringify({ error: "No active case found" }), {
-      status: 404,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-
-  return new Response(JSON.stringify({
-    case_id: data.id,
-    case_no: data.case_no,
-    title: data.title,
-    prompt: data.prompt,
-    option_a_label: data.option_a_label,
-    option_b_label: data.option_b_label,
-  }), {
+  return new Response(JSON.stringify(data), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 });

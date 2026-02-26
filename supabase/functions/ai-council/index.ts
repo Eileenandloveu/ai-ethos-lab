@@ -24,10 +24,8 @@ Deno.serve(async (req) => {
   );
 
   const { data, error } = await supabase
-    .from("cases")
-    .select("id, case_no, title, prompt, option_a_label, option_b_label")
-    .eq("status", "active")
-    .order("created_at", { ascending: false })
+    .from("ai_council_state")
+    .select("motion_no, motion_text, split_a, split_b, heat_level, decision_eta_seconds")
     .limit(1)
     .maybeSingle();
 
@@ -39,20 +37,13 @@ Deno.serve(async (req) => {
   }
 
   if (!data) {
-    return new Response(JSON.stringify({ error: "No active case found" }), {
+    return new Response(JSON.stringify({ error: "No council state found" }), {
       status: 404,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 
-  return new Response(JSON.stringify({
-    case_id: data.id,
-    case_no: data.case_no,
-    title: data.title,
-    prompt: data.prompt,
-    option_a_label: data.option_a_label,
-    option_b_label: data.option_b_label,
-  }), {
+  return new Response(JSON.stringify(data), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 });
