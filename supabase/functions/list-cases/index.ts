@@ -36,7 +36,18 @@ Deno.serve(async (req) => {
     });
   }
 
-  return new Response(JSON.stringify(data), {
+  const mapped = (data ?? []).map((row) => ({
+    case_id: row.id,
+    case_no: row.case_no,
+    title: row.title,
+    prompt: row.prompt,
+    option_a_label: row.option_a_label,
+    option_b_label: row.option_b_label,
+    status: row.status,
+    season: row.season,
+  }));
+
+  return new Response(JSON.stringify(mapped), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 });
