@@ -1,45 +1,45 @@
 import { useState } from "react";
-import { Case, counterArguments } from "@/data/cases";
+import { BackendCase } from "@/lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 import { Copy, Check, ChevronDown, ThumbsUp, ThumbsDown, Link } from "lucide-react";
 
 interface VoteResultsProps {
-  currentCase: Case;
+  currentCase: BackendCase;
   userVote: "a" | "b";
+  splitA: number;
+  splitB: number;
   onNextCase: () => void;
   onStay: () => void;
   autoCountdown: number;
   autoEnabled: boolean;
   trialNumber: number;
+  totalCases: number;
 }
 
-const SHARE_URL = "https://app.n-ai.org";
+const SHARE_URL = "https://www.n-ai.org";
 
 export const VoteResults = ({
   currentCase,
   userVote,
+  splitA,
+  splitB,
   onNextCase,
   onStay,
   autoCountdown,
   autoEnabled,
   trialNumber,
+  totalCases,
 }: VoteResultsProps) => {
-  const [showArguments, setShowArguments] = useState(false);
   const [copied, setCopied] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
-  const [argLikes, setArgLikes] = useState<Record<string, { up: number; down: number }>>({});
-  const [argVoted, setArgVoted] = useState<Set<string>>(new Set());
 
-  const voteA = currentCase.mockVoteA;
-  const voteB = 100 - voteA;
+  const voteA = splitA;
+  const voteB = splitB;
   const userPercent = userVote === "a" ? voteA : voteB;
   const isMinority = userPercent < 50;
-  const userLabel = userVote === "a" ? currentCase.optionA : currentCase.optionB;
+  const userLabel = userVote === "a" ? currentCase.option_a_label : currentCase.option_b_label;
 
-  const args = counterArguments[currentCase.id];
-  const opposingArgs = userVote === "a" ? args.b : args.a;
-
-  const shareText = `I voted ${userLabel} (${isMinority ? "minority" : "majority"} ${userPercent}%) on AIOS. Case #${String(currentCase.id).padStart(3, "0")}: "${currentCase.context}" Options: ${currentCase.optionA} vs ${currentCase.optionB}. Vote here: ${SHARE_URL}`;
+  const shareText = `I voted ${userLabel} (${isMinority ? "minority" : "majority"} ${userPercent}%) on AIOS. Case #${currentCase.case_no}: "${currentCase.prompt}" Options: ${currentCase.option_a_label} vs ${currentCase.option_b_label}. Vote here: ${SHARE_URL}`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(shareText);
@@ -52,25 +52,6 @@ export const VoteResults = ({
     setLinkCopied(true);
     setTimeout(() => setLinkCopied(false), 2000);
   };
-
-  const handleArgVote = (idx: number, dir: "up" | "down") => {
-    const key = `${currentCase.id}-${idx}-${dir}`;
-    if (argVoted.has(`${currentCase.id}-${idx}`)) return;
-    setArgVoted(new Set([...argVoted, `${currentCase.id}-${idx}`]));
-    setArgLikes((prev) => {
-      const existing = prev[`${currentCase.id}-${idx}`] || { up: Math.floor(Math.random() * 30) + 5, down: Math.floor(Math.random() * 10) + 2 };
-      return {
-        ...prev,
-        [`${currentCase.id}-${idx}`]: {
-          up: existing.up + (dir === "up" ? 1 : 0),
-          down: existing.down + (dir === "down" ? 1 : 0),
-        },
-      };
-    });
-  };
-
-  const getArgCounts = (idx: number) =>
-    argLikes[`${currentCase.id}-${idx}`] || { up: Math.floor(12 + idx * 7), down: Math.floor(3 + idx * 2) };
 
   const formatCountdown = (s: number) => {
     const m = Math.floor(s / 60);
@@ -88,8 +69,8 @@ export const VoteResults = ({
       {/* Vote bar */}
       <div className="rounded-lg border bg-card p-5 shadow-sm">
         <div className="mb-3 flex items-center justify-between font-mono text-xs text-muted-foreground">
-          <span className="font-semibold text-vote-a">{currentCase.optionA}</span>
-          <span className="font-semibold text-vote-b">{currentCase.optionB}</span>
+          <span className="font-semibold text-vote-a">{currentCase.option_a_label}</span>
+          <span className="font-semibold text-vote-b">{currentCase.option_b_label}</span>
         </div>
         <div className="relative h-8 w-full overflow-hidden rounded-full bg-muted">
           <motion.div
@@ -109,7 +90,6 @@ export const VoteResults = ({
           </div>
         </div>
 
-        {/* Minority/majority message */}
         <div className="mt-3 text-center space-y-1">
           <span
             className={`inline-block rounded-full px-4 py-1.5 font-mono text-xs font-semibold ${
@@ -122,78 +102,7 @@ export const VoteResults = ({
               ? `YOU'RE IN THE MINORITY (${userPercent}%)`
               : `YOU'RE IN THE MAJORITY (${userPercent}%)`}
           </span>
-          <p className="font-mono text-[10px] text-muted-foreground">
-            Think they're wrong? React below.
-          </p>
         </div>
-      </div>
-
-      {/* Why disagree */}
-      <button
-        onClick={() => setShowArguments(!showArguments)}
-        className="flex w-full items-center justify-between rounded-lg border bg-card px-5 py-3 font-mono text-xs font-semibold text-foreground transition-colors hover:bg-secondary"
-      >
-        WHY DO PEOPLE DISAGREE?
-        <ChevronDown
-          className={`h-4 w-4 text-muted-foreground transition-transform ${
-            showArguments ? "rotate-180" : ""
-          }`}
-        />
-      </button>
-
-      <AnimatePresence>
-        {showArguments && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden rounded-lg border bg-console-bg"
-          >
-            <div className="p-4 space-y-3">
-              <p className="font-mono text-xs font-semibold text-muted-foreground mb-2">
-                STRONGEST ARGUMENTS AGAINST YOUR VOTE:
-              </p>
-              {opposingArgs.map((arg, i) => {
-                const counts = getArgCounts(i);
-                const hasVoted = argVoted.has(`${currentCase.id}-${i}`);
-                return (
-                  <div key={i} className="flex items-start gap-2 font-mono text-xs text-foreground">
-                    <span className="text-primary mt-0.5">›</span>
-                    <span className="flex-1">{arg}</span>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button
-                        onClick={() => handleArgVote(i, "up")}
-                        disabled={hasVoted}
-                        className={`flex items-center gap-0.5 px-1 py-0.5 rounded text-[10px] transition-colors ${hasVoted ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
-                      >
-                        <ThumbsUp className="h-3 w-3" />
-                        {counts.up}
-                      </button>
-                      <button
-                        onClick={() => handleArgVote(i, "down")}
-                        disabled={hasVoted}
-                        className={`flex items-center gap-0.5 px-1 py-0.5 rounded text-[10px] transition-colors ${hasVoted ? "text-destructive" : "text-muted-foreground hover:text-foreground"}`}
-                      >
-                        <ThumbsDown className="h-3 w-3" />
-                        {counts.down}
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Twist */}
-      <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 animate-glow">
-        <p className="font-mono text-[10px] font-bold text-primary mb-1 tracking-widest">
-          TWIST — NEW INFO REVEALED
-        </p>
-        <p className="font-mono text-xs leading-relaxed text-foreground">
-          {currentCase.twist}
-        </p>
       </div>
 
       {/* Share */}
@@ -237,7 +146,7 @@ export const VoteResults = ({
           {autoEnabled
             ? `Next trial auto-starts in ${formatCountdown(autoCountdown)}`
             : "Auto-start paused"}{" "}
-          · Trial {trialNumber} / 6 — Season 1
+          · Trial {trialNumber} / {totalCases} — Season 1
         </span>
       </div>
     </motion.div>
