@@ -1,48 +1,58 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ThumbsUp, ThumbsDown, Send } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { fetchTestimonies, submitTestimony, voteTestimony, getVisitorId, Testimony } from "@/lib/api";
 
 interface TestimonySectionProps {
   caseId: string;
   onTestimonySubmit: () => void;
 }
 
-const mockTestimonies = [
-  { id: 1, text: "Power dynamics make this clear abuse.", ups: 42, downs: 8 },
-  { id: 2, text: "Humans threaten each other too — context matters.", ups: 38, downs: 14 },
-  { id: 3, text: "The AI's fear response changes everything.", ups: 31, downs: 5 },
-  { id: 4, text: "We're projecting human emotions onto code.", ups: 27, downs: 19 },
-  { id: 5, text: "Intent matters more than the AI's simulation.", ups: 19, downs: 11 },
-];
-
 export const TestimonySection = ({ caseId, onTestimonySubmit }: TestimonySectionProps) => {
   const [input, setInput] = useState("");
   const [submitted, setSubmitted] = useState(false);
-  const [testimonies, setTestimonies] = useState(mockTestimonies);
-  const [voted, setVoted] = useState<Set<string>>(new Set());
+  const [testimonies, setTestimonies] = useState<Testimony[]>([]);
+  const [loading, setLoading] = useState(false);
+  const visitorId = getVisitorId();
 
-  const handleSubmit = () => {
-    if (!input.trim()) return;
-    setTestimonies([
-      { id: Date.now(), text: input, ups: 1, downs: 0 },
-      ...testimonies,
-    ]);
+  // Load testimonies when caseId changes
+  useEffect(() => {
+    if (!caseId) return;
+    setLoading(true);
+    setSubmitted(false);
     setInput("");
-    setSubmitted(true);
-    onTestimonySubmit();
+    fetchTestimonies(caseId, visitorId)
+      .then(setTestimonies)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [caseId, visitorId]);
+
+  const handleSubmit = async () => {
+    if (!input.trim()) return;
+    try {
+      const updated = await submitTestimony(visitorId, caseId, input.trim());
+      setTestimonies(updated);
+      setInput("");
+      setSubmitted(true);
+      onTestimonySubmit();
+    } catch (e) {
+      console.error("Submit testimony error:", e);
+    }
   };
 
-  const handleVote = (id: number, dir: "up" | "down") => {
-    const key = `${id}`;
-    if (voted.has(key)) return;
-    setVoted(new Set([...voted, key]));
-    setTestimonies(
-      testimonies.map((t) =>
-        t.id === id
-          ? { ...t, ups: t.ups + (dir === "up" ? 1 : 0), downs: t.downs + (dir === "down" ? 1 : 0) }
+  const handleVote = async (testimonyId: string, dir: "up" | "down") => {
+    const existing = testimonies.find(t => t.id === testimonyId);
+    if (existing?.my_vote) return;
+    try {
+      const result = await voteTestimony(visitorId, testimonyId, dir);
+      setTestimonies(prev => prev.map(t =>
+        t.id === result.testimony_id
+          ? { ...t, up_count: result.up_count, down_count: result.down_count, my_vote: result.my_vote }
           : t
-      )
-    );
+      ));
+    } catch (e) {
+      console.error("Vote testimony error:", e);
+    }
   };
 
   return (
@@ -83,9 +93,11 @@ export const TestimonySection = ({ caseId, onTestimonySubmit }: TestimonySection
         <p className="mb-4 font-mono text-xs text-majority">✓ Testimony recorded</p>
       )}
 
+      {loading && <p className="font-mono text-xs text-muted-foreground animate-pulse">Loading…</p>}
+
       <div className="space-y-2">
         <AnimatePresence>
-          {testimonies.slice(0, 5).map((t) => (
+          {testimonies.map((t) => (
             <motion.div
               key={t.id}
               initial={{ opacity: 0, y: 8 }}
@@ -98,25 +110,23 @@ export const TestimonySection = ({ caseId, onTestimonySubmit }: TestimonySection
               <div className="flex items-center gap-1.5 shrink-0">
                 <button
                   onClick={() => handleVote(t.id, "up")}
+                  disabled={!!t.my_vote}
                   className={`flex items-center gap-0.5 rounded px-1 py-0.5 font-mono text-[10px] transition-colors ${
-                    voted.has(`${t.id}`)
-                      ? "text-primary"
-                      : "text-muted-foreground hover:text-foreground"
+                    t.my_vote === "up" ? "text-primary" : t.my_vote ? "text-muted-foreground" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <ThumbsUp className="h-3 w-3" />
-                  {t.ups}
+                  {t.up_count}
                 </button>
                 <button
                   onClick={() => handleVote(t.id, "down")}
+                  disabled={!!t.my_vote}
                   className={`flex items-center gap-0.5 rounded px-1 py-0.5 font-mono text-[10px] transition-colors ${
-                    voted.has(`${t.id}`)
-                      ? "text-destructive"
-                      : "text-muted-foreground hover:text-foreground"
+                    t.my_vote === "down" ? "text-destructive" : t.my_vote ? "text-muted-foreground" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <ThumbsDown className="h-3 w-3" />
-                  {t.downs}
+                  {t.down_count}
                 </button>
               </div>
             </motion.div>

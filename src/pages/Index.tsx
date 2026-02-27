@@ -200,6 +200,7 @@ const Index = () => {
                 />
 
                 <DebatePanel
+                  caseId={currentCase.case_id}
                   userVote={userVote}
                   optionALabel={currentCase.option_a_label}
                   optionBLabel={currentCase.option_b_label}

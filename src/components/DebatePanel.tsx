@@ -1,40 +1,46 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { fetchArguments, voteArgument, getVisitorId, Argument } from "@/lib/api";
 
 interface DebatePanelProps {
+  caseId: string;
   userVote: "a" | "b";
   optionALabel: string;
   optionBLabel: string;
 }
 
-const counterArguments: Record<string, { text: string; ups: number; downs: number }[]> = {
-  default: [
-    { text: "Power dynamics make this clear — but who defines 'power' in a digital context?", ups: 142, downs: 38 },
-    { text: "If it can't suffer, does consent even apply? Where's the line?", ups: 127, downs: 51 },
-    { text: "We're projecting human emotions onto code. That's the real bias.", ups: 98, downs: 67 },
-    { text: "Intent matters more than simulation. A threat is a threat.", ups: 89, downs: 42 },
-    { text: "Today's 'just code' is tomorrow's sentience. Act now or regret later.", ups: 76, downs: 33 },
-  ],
-};
-
-export const DebatePanel = ({ userVote, optionALabel, optionBLabel }: DebatePanelProps) => {
+export const DebatePanel = ({ caseId, userVote, optionALabel, optionBLabel }: DebatePanelProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [voted, setVoted] = useState<Set<number>>(new Set());
-  const [args, setArgs] = useState(counterArguments.default);
+  const [args, setArgs] = useState<Argument[]>([]);
+  const [loading, setLoading] = useState(false);
+  const visitorId = getVisitorId();
 
   const oppositeLabel = userVote === "a" ? optionBLabel : optionALabel;
 
-  const handleVote = (idx: number, dir: "up" | "down") => {
-    if (voted.has(idx)) return;
-    setVoted(new Set([...voted, idx]));
-    setArgs((prev) =>
-      prev.map((a, i) =>
-        i === idx
-          ? { ...a, ups: a.ups + (dir === "up" ? 1 : 0), downs: a.downs + (dir === "down" ? 1 : 0) }
+  // Load arguments when panel opens or caseId changes
+  useEffect(() => {
+    if (!isOpen || !caseId) return;
+    setLoading(true);
+    fetchArguments(caseId, visitorId)
+      .then(setArgs)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [isOpen, caseId, visitorId]);
+
+  const handleVote = async (argKey: string, dir: "up" | "down") => {
+    const existing = args.find(a => a.argument_key === argKey);
+    if (existing?.my_vote) return; // already voted
+    try {
+      const result = await voteArgument(visitorId, caseId, argKey, dir);
+      setArgs(prev => prev.map(a =>
+        a.argument_key === result.argument_key
+          ? { ...a, up_count: result.up_count, down_count: result.down_count, my_vote: result.my_vote }
           : a
-      )
-    );
+      ));
+    } catch (e) {
+      console.error("Vote argument error:", e);
+    }
   };
 
   return (
@@ -59,9 +65,10 @@ export const DebatePanel = ({ userVote, optionALabel, optionBLabel }: DebatePane
               <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider">
                 Strongest arguments for "{oppositeLabel}"
               </p>
+              {loading && <p className="font-mono text-xs text-muted-foreground animate-pulse">Loading…</p>}
               {args.map((arg, idx) => (
                 <motion.div
-                  key={idx}
+                  key={arg.argument_key}
                   initial={{ opacity: 0, x: -8 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: idx * 0.08 }}
@@ -72,20 +79,22 @@ export const DebatePanel = ({ userVote, optionALabel, optionBLabel }: DebatePane
                   </p>
                   <div className="flex items-center gap-2 shrink-0">
                     <button
-                      onClick={() => handleVote(idx, "up")}
+                      onClick={() => handleVote(arg.argument_key, "up")}
                       className={`flex items-center gap-0.5 rounded px-1.5 py-0.5 font-mono text-[10px] transition-colors ${
-                        voted.has(idx) ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                        arg.my_vote === "up" ? "text-primary" : arg.my_vote ? "text-muted-foreground" : "text-muted-foreground hover:text-foreground"
                       }`}
+                      disabled={!!arg.my_vote}
                     >
-                      <ThumbsUp className="h-3 w-3" /> {arg.ups}
+                      <ThumbsUp className="h-3 w-3" /> {arg.up_count}
                     </button>
                     <button
-                      onClick={() => handleVote(idx, "down")}
+                      onClick={() => handleVote(arg.argument_key, "down")}
                       className={`flex items-center gap-0.5 rounded px-1.5 py-0.5 font-mono text-[10px] transition-colors ${
-                        voted.has(idx) ? "text-destructive" : "text-muted-foreground hover:text-foreground"
+                        arg.my_vote === "down" ? "text-destructive" : arg.my_vote ? "text-muted-foreground" : "text-muted-foreground hover:text-foreground"
                       }`}
+                      disabled={!!arg.my_vote}
                     >
-                      <ThumbsDown className="h-3 w-3" /> {arg.downs}
+                      <ThumbsDown className="h-3 w-3" /> {arg.down_count}
                     </button>
                   </div>
                 </motion.div>
