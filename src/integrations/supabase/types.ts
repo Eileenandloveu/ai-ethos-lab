@@ -68,6 +68,105 @@ export type Database = {
         }
         Relationships: []
       }
+      case_argument_votes: {
+        Row: {
+          argument_key: string
+          case_id: string
+          created_at: string
+          id: string
+          updated_at: string
+          visitor_id: string
+          vote: string
+        }
+        Insert: {
+          argument_key: string
+          case_id: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          visitor_id: string
+          vote: string
+        }
+        Update: {
+          argument_key?: string
+          case_id?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          visitor_id?: string
+          vote?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_argument_votes_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      case_arguments: {
+        Row: {
+          argument_key: string
+          case_id: string
+          created_at: string
+          id: string
+          text: string
+        }
+        Insert: {
+          argument_key: string
+          case_id: string
+          created_at?: string
+          id?: string
+          text: string
+        }
+        Update: {
+          argument_key?: string
+          case_id?: string
+          created_at?: string
+          id?: string
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_arguments_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      case_completions: {
+        Row: {
+          case_id: string
+          first_completed_at: string
+          id: string
+          visitor_id: string
+        }
+        Insert: {
+          case_id: string
+          first_completed_at?: string
+          id?: string
+          visitor_id: string
+        }
+        Update: {
+          case_id?: string
+          first_completed_at?: string
+          id?: string
+          visitor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_completions_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       case_stats_seed: {
         Row: {
           base_participants: number
@@ -227,6 +326,27 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_visits: {
+        Row: {
+          first_seen_at: string
+          id: string
+          visit_date: string
+          visitor_id: string
+        }
+        Insert: {
+          first_seen_at?: string
+          id?: string
+          visit_date: string
+          visitor_id: string
+        }
+        Update: {
+          first_seen_at?: string
+          id?: string
+          visit_date?: string
+          visitor_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           clerk_unlocked: boolean
@@ -259,6 +379,73 @@ export type Database = {
           visitor_id?: string
         }
         Relationships: []
+      }
+      testimonies: {
+        Row: {
+          case_id: string
+          created_at: string
+          id: string
+          text: string
+          visitor_id: string
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          id?: string
+          text: string
+          visitor_id: string
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          id?: string
+          text?: string
+          visitor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "testimonies_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      testimony_votes: {
+        Row: {
+          created_at: string
+          id: string
+          testimony_id: string
+          updated_at: string
+          visitor_id: string
+          vote: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          testimony_id: string
+          updated_at?: string
+          visitor_id: string
+          vote: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          testimony_id?: string
+          updated_at?: string
+          visitor_id?: string
+          vote?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "testimony_votes_testimony_id_fkey"
+            columns: ["testimony_id"]
+            isOneToOne: false
+            referencedRelation: "testimonies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
