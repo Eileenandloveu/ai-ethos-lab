@@ -83,6 +83,38 @@ export interface Profile {
   clerk_unlocked: boolean;
 }
 
+export interface Argument {
+  argument_key: string;
+  text: string;
+  up_count: number;
+  down_count: number;
+  my_vote: string | null;
+}
+
+export interface Testimony {
+  id: string;
+  text: string;
+  up_count: number;
+  down_count: number;
+  my_vote: string | null;
+}
+
+export interface ArgumentVoteResult {
+  ok: boolean;
+  argument_key: string;
+  up_count: number;
+  down_count: number;
+  my_vote: string;
+}
+
+export interface TestimonyVoteResult {
+  ok: boolean;
+  testimony_id: string;
+  up_count: number;
+  down_count: number;
+  my_vote: string;
+}
+
 // ── Endpoints ──
 export const fetchCurrentCase = () => get<BackendCase>("/current-case");
 export const fetchListCases = () => get<BackendCase[]>("/list-cases");
@@ -93,3 +125,17 @@ export const fetchProfile = (visitorId: string) =>
   get<Profile>(`/profile?visitor_id=${visitorId}`);
 export const submitVote = (visitorId: string, caseId: string, choice: "A" | "B") =>
   post<{ ok: boolean }>("/vote", { visitor_id: visitorId, case_id: caseId, choice });
+
+// ── Arguments ──
+export const fetchArguments = (caseId: string, visitorId: string) =>
+  get<Argument[]>(`/list-arguments?case_id=${caseId}&visitor_id=${visitorId}`);
+export const voteArgument = (visitorId: string, caseId: string, argumentKey: string, vote: "up" | "down") =>
+  post<ArgumentVoteResult>("/vote-argument", { visitor_id: visitorId, case_id: caseId, argument_key: argumentKey, vote });
+
+// ── Testimonies ──
+export const fetchTestimonies = (caseId: string, visitorId: string) =>
+  get<Testimony[]>(`/list-testimonies?case_id=${caseId}&visitor_id=${visitorId}`);
+export const submitTestimony = (visitorId: string, caseId: string, text: string) =>
+  post<Testimony[]>("/submit-testimony", { visitor_id: visitorId, case_id: caseId, text });
+export const voteTestimony = (visitorId: string, testimonyId: string, vote: "up" | "down") =>
+  post<TestimonyVoteResult>("/vote-testimony", { visitor_id: visitorId, testimony_id: testimonyId, vote });
