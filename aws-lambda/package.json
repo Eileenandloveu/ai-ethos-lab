@@ -1,8 +1,0 @@
-{
-  "name": "ai-ethics-lab-lambda",
-  "version": "1.0.0",
-  "description": "AWS Lambda handlers for AI Ethics Lab",
-  "dependencies": {
-    "pg": "^8.13.0"
-  }
-}
