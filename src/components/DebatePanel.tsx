@@ -30,7 +30,7 @@ export const DebatePanel = ({ caseId, userVote, optionALabel, optionBLabel }: De
 
   const handleVote = async (argKey: string, dir: "up" | "down") => {
     const existing = args.find(a => a.argument_key === argKey);
-    if (existing?.my_vote) return; // already voted
+    if (existing?.my_vote === dir) return; // already voted same direction
     try {
       const result = await voteArgument(visitorId, caseId, argKey, dir);
       setArgs(prev => prev.map(a =>
@@ -81,18 +81,18 @@ export const DebatePanel = ({ caseId, userVote, optionALabel, optionBLabel }: De
                     <button
                       onClick={() => handleVote(arg.argument_key, "up")}
                       className={`flex items-center gap-0.5 rounded px-1.5 py-0.5 font-mono text-[10px] transition-colors ${
-                        arg.my_vote === "up" ? "text-primary" : arg.my_vote ? "text-muted-foreground" : "text-muted-foreground hover:text-foreground"
+                        arg.my_vote === "up" ? "text-primary" : "text-muted-foreground hover:text-foreground"
                       }`}
-                      disabled={!!arg.my_vote}
+                      disabled={arg.my_vote === "up"}
                     >
                       <ThumbsUp className="h-3 w-3" /> {arg.up_count}
                     </button>
                     <button
                       onClick={() => handleVote(arg.argument_key, "down")}
                       className={`flex items-center gap-0.5 rounded px-1.5 py-0.5 font-mono text-[10px] transition-colors ${
-                        arg.my_vote === "down" ? "text-destructive" : arg.my_vote ? "text-muted-foreground" : "text-muted-foreground hover:text-foreground"
+                        arg.my_vote === "down" ? "text-destructive" : "text-muted-foreground hover:text-foreground"
                       }`}
-                      disabled={!!arg.my_vote}
+                      disabled={arg.my_vote === "down"}
                     >
                       <ThumbsDown className="h-3 w-3" /> {arg.down_count}
                     </button>
