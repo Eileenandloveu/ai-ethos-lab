@@ -3,17 +3,12 @@
  * STATS_MODE controls how vote statistics are presented.
  */
 
-const PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-const BASE = `https://${PROJECT_ID}.supabase.co/functions/v1`;
+const BASE = import.meta.env.VITE_API_BASE_URL || "https://app.n-ai.org";
 
 export const STATS_MODE: "atmosphere" | "real" | "hybrid" = "hybrid";
 
 function headers(json = false): HeadersInit {
-  const h: Record<string, string> = {
-    apikey: ANON_KEY,
-    Authorization: `Bearer ${ANON_KEY}`,
-  };
+  const h: Record<string, string> = {};
   if (json) h["Content-Type"] = "application/json";
   return h;
 }
