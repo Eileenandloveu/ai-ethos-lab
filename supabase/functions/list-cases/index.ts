@@ -1,27 +1,13 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "GET, OPTIONS",
-};
+import { handleOptions, jsonResponse } from "../_shared/cors.ts";
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const optRes = handleOptions(req);
+  if (optRes) return optRes;
 
-  if (req.method !== "GET") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
-      status: 405,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
+  if (req.method !== "GET") return jsonResponse(req, { error: "Method not allowed" }, 405);
 
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-  );
+  const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
   const { data, error } = await supabase
     .from("cases")
@@ -29,25 +15,12 @@ Deno.serve(async (req) => {
     .eq("season", 1)
     .order("case_no", { ascending: true });
 
-  if (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
+  if (error) return jsonResponse(req, { error: error.message }, 500);
 
   const mapped = (data ?? []).map((row) => ({
-    case_id: row.id,
-    case_no: row.case_no,
-    title: row.title,
-    prompt: row.prompt,
-    option_a_label: row.option_a_label,
-    option_b_label: row.option_b_label,
-    status: row.status,
-    season: row.season,
+    case_id: row.id, case_no: row.case_no, title: row.title, prompt: row.prompt,
+    option_a_label: row.option_a_label, option_b_label: row.option_b_label, status: row.status, season: row.season,
   }));
 
-  return new Response(JSON.stringify(mapped), {
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
+  return jsonResponse(req, mapped);
 });
