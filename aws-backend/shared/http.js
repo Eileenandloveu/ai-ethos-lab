@@ -1,16 +1,16 @@
-const ALLOWED_ORIGINS = ['https://www.n-ai.org', 'https://n-ai.org', 'http://localhost:5173', 'https://ai-ethos-lab.lovable.app'];
-
 function getCorsOrigin(event) {
   const origin = event?.headers?.origin || event?.headers?.Origin || '';
-  // Reflect trusted origins; fallback to wildcard for preview/non-credentialed requests.
-  return ALLOWED_ORIGINS.includes(origin) ? origin : '*';
+  // For browser clients, echo request origin to avoid preview/publish origin mismatch.
+  // For non-browser requests (no Origin), fallback to wildcard.
+  return origin || '*';
 }
 
 function corsHeaders(event) {
   return {
     'Access-Control-Allow-Origin': getCorsOrigin(event),
-    'Access-Control-Allow-Headers': 'content-type',
+    'Access-Control-Allow-Headers': 'content-type, authorization, apikey, x-requested-with',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Max-Age': '86400',
     'Content-Type': 'application/json',
     'Vary': 'Origin',
   };
