@@ -1,27 +1,13 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "GET, OPTIONS",
-};
+import { handleOptions, jsonResponse } from "../_shared/cors.ts";
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const optRes = handleOptions(req);
+  if (optRes) return optRes;
 
-  if (req.method !== "GET") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
-      status: 405,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
+  if (req.method !== "GET") return jsonResponse(req, { error: "Method not allowed" }, 405);
 
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-  );
+  const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
   const { data, error } = await supabase
     .from("cases")
@@ -31,28 +17,11 @@ Deno.serve(async (req) => {
     .limit(1)
     .maybeSingle();
 
-  if (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
+  if (error) return jsonResponse(req, { error: error.message }, 500);
+  if (!data) return jsonResponse(req, { error: "No active case found" }, 404);
 
-  if (!data) {
-    return new Response(JSON.stringify({ error: "No active case found" }), {
-      status: 404,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-
-  return new Response(JSON.stringify({
-    case_id: data.id,
-    case_no: data.case_no,
-    title: data.title,
-    prompt: data.prompt,
-    option_a_label: data.option_a_label,
-    option_b_label: data.option_b_label,
-  }), {
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  return jsonResponse(req, {
+    case_id: data.id, case_no: data.case_no, title: data.title,
+    prompt: data.prompt, option_a_label: data.option_a_label, option_b_label: data.option_b_label,
   });
 });
