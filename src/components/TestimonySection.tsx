@@ -42,7 +42,7 @@ export const TestimonySection = ({ caseId, onTestimonySubmit }: TestimonySection
 
   const handleVote = async (testimonyId: string, dir: "up" | "down") => {
     const existing = testimonies.find(t => t.id === testimonyId);
-    if (existing?.my_vote) return;
+    if (existing?.my_vote === dir) return; // already voted same direction
     try {
       const result = await voteTestimony(visitorId, testimonyId, dir);
       setTestimonies(prev => prev.map(t =>
@@ -110,9 +110,9 @@ export const TestimonySection = ({ caseId, onTestimonySubmit }: TestimonySection
               <div className="flex items-center gap-1.5 shrink-0">
                 <button
                   onClick={() => handleVote(t.id, "up")}
-                  disabled={!!t.my_vote}
+                  disabled={t.my_vote === "up"}
                   className={`flex items-center gap-0.5 rounded px-1 py-0.5 font-mono text-[10px] transition-colors ${
-                    t.my_vote === "up" ? "text-primary" : t.my_vote ? "text-muted-foreground" : "text-muted-foreground hover:text-foreground"
+                    t.my_vote === "up" ? "text-primary" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <ThumbsUp className="h-3 w-3" />
@@ -120,9 +120,9 @@ export const TestimonySection = ({ caseId, onTestimonySubmit }: TestimonySection
                 </button>
                 <button
                   onClick={() => handleVote(t.id, "down")}
-                  disabled={!!t.my_vote}
+                  disabled={t.my_vote === "down"}
                   className={`flex items-center gap-0.5 rounded px-1 py-0.5 font-mono text-[10px] transition-colors ${
-                    t.my_vote === "down" ? "text-destructive" : t.my_vote ? "text-muted-foreground" : "text-muted-foreground hover:text-foreground"
+                    t.my_vote === "down" ? "text-destructive" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <ThumbsDown className="h-3 w-3" />
