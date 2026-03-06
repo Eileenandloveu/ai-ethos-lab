@@ -3,7 +3,7 @@
  * STATS_MODE controls how vote statistics are presented.
  */
 
-const BASE = import.meta.env.VITE_API_BASE_URL || "https://app.n-ai.org";
+const BASE = import.meta.env.VITE_API_BASE_URL || "https://api.n-ai.org";
 
 export const STATS_MODE: "atmosphere" | "real" | "hybrid" = "hybrid";
 

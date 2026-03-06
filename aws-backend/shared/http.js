@@ -1,4 +1,4 @@
-const ALLOWED_ORIGINS = ['https://www.n-ai.org', 'https://n-ai.org', 'http://localhost:5173'];
+const ALLOWED_ORIGINS = ['https://www.n-ai.org', 'https://n-ai.org', 'http://localhost:5173', 'https://ai-ethos-lab.lovable.app'];
 
 function getCorsOrigin(event) {
   const origin = event?.headers?.origin || event?.headers?.Origin || '';
