@@ -6,7 +6,8 @@ const ALLOWED_ORIGINS = [
 
 export function getCorsHeaders(req: Request): Record<string, string> {
   const origin = req.headers.get("origin") ?? "";
-  const allowOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  // If origin matches allowlist, reflect it. Otherwise use wildcard (safe for non-credentialed requests).
+  const allowOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : "*";
   return {
     "Access-Control-Allow-Origin": allowOrigin,
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
