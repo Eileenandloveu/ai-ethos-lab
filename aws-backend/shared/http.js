@@ -1,8 +1,22 @@
+const ALLOWED_ORIGINS = [
+  'https://n-ai.org',
+  'https://www.n-ai.org',
+  'http://localhost:5173',
+];
+
+function isAllowedOrigin(origin) {
+  if (!origin) return false;
+  if (ALLOWED_ORIGINS.includes(origin)) return true;
+  // Allow any Lovable preview/publish origin
+  if (origin.endsWith('.lovableproject.com') || origin.endsWith('.lovable.app')) return true;
+  return false;
+}
+
 function getCorsOrigin(event) {
   const origin = event?.headers?.origin || event?.headers?.Origin || '';
-  // For browser clients, echo request origin to avoid preview/publish origin mismatch.
-  // For non-browser requests (no Origin), fallback to wildcard.
-  return origin || '*';
+  if (isAllowedOrigin(origin)) return origin;
+  // Non-browser requests (no Origin header) get wildcard; unknown origins get first allowed
+  return origin ? ALLOWED_ORIGINS[0] : '*';
 }
 
 function corsHeaders(event) {
