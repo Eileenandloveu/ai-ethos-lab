@@ -236,3 +236,37 @@ aws-backend/
 | `DB_NAME` | `ai_ethics_lab` |
 | `DB_USER` | `admin` |
 | `DB_PASSWORD` | `your-secure-password` |
+
+---
+
+## 🤖 Bot Runner (24/7 Background Activity)
+
+A separate Node.js process that generates realistic votes, reactions, and testimonies around the clock.
+
+**Full documentation:** See [`bots/README.md`](bots/README.md)
+
+### Quick Start
+
+```bash
+# 1. Run migration
+psql -h $DB_HOST -U $DB_USER -d $DB_NAME -f aws-backend/bots/bot-tables.sql
+
+# 2. Enable bots
+psql -h $DB_HOST -U $DB_USER -d $DB_NAME -c \
+  "UPDATE bot_settings SET enabled = true, bots_count = 5, actions_per_minute = 10;"
+
+# 3. Start with pm2
+pm2 start aws-backend/bots/runner.js --name aios-bot-runner
+pm2 save
+
+# 4. Monitor
+pm2 logs aios-bot-runner
+```
+
+### Bot-specific Environment Variables
+
+| Variable | Required | Example |
+|---|---|---|
+| `BOT_AI_PROVIDER` | No | `openai` |
+| `BOT_AI_API_KEY` | No | `sk-...` |
+| `BOT_AI_MODEL` | No | `gpt-4o-mini` |
