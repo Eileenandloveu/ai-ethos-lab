@@ -1,5 +1,5 @@
 /**
- * Backend API helper — calls edge functions via the Supabase project URL.
+ * Backend API helper — calls the AWS backend at api.n-ai.org.
  * STATS_MODE controls how vote statistics are presented.
  */
 
